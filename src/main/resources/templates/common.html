@@ -1,10 +1,66 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<!-- Fragment pour le head -->
-<head th:fragment="head">
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>Aide à domicile RH - gestion des salariés</title>
-  <link rel="stylesheet" href="/static/bootstrap.min.css">
-  <link rel="stylesheet" href="/static/font-awesome.css">
-</head>
+  <head th:fragment="head(title)">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title th:replace="${title}">Default Title</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css" />
+    <link rel="stylesheet" href="/static/font-awesome.css" />
+  </head>
+  
+  <body>
+    <nav 
+      th:fragment="navbar(activeSection, searchAction)" 
+      class="navbar navbar-expand-lg navbar-light bg-light"
+    >
+      <a class="navbar-brand" href="/">Aide à domicile RH - gestion des salariés</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item" th:classappend="${activeSection == 'salaries' ? 'active' : ''}">
+            <a
+              href="/salaries?page=0&amp;size=10&amp;sortProperty=id&amp;sortDirection=ASC"
+              class="nav-link"
+              >Liste des salariés
+              <span class="badge badge-primary" th:text="${nbSalaries}"></span
+            ></a>
+          </li>
+          <!-- You can add more nav items here and highlight them based on activeSection -->
+        </ul>
+
+        <form
+          class="form-inline my-2 my-lg-0"
+          role="search"
+          th:action="${searchAction ?: '/salaries?page=0&amp;size=10&amp;sortProperty=id&amp;sortDirection=ASC'}"
+          method="GET"
+        >
+          <div class="form-group">
+            <input
+              name="nom"
+              id="nom"
+              class="form-control"
+              placeholder="Rechercher un nom"
+              type="text"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-outline-success ml-2 my-2 my-sm-0"
+          >
+            Rechercher
+          </button>
+        </form>
+      </div>
+    </nav>
+  </body>
 </html>

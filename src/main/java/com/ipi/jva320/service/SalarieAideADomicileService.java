@@ -13,7 +13,6 @@ import javax.persistence.EntityExistsException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -51,14 +50,13 @@ public class SalarieAideADomicileService {
     /**
      * @return le nombre de salariés dans la base
      */
-    public List<SalarieAideADomicile> getSalaries(String nom) {
+    public Page<SalarieAideADomicile> getSalaries(String nom) {
         return salarieAideADomicileRepository.findAllByNom(nom, null);
     }
-
     /**
      * @return le nombre de salariés dans la base
      */
-    public List<SalarieAideADomicile> getSalaries(String nom, Pageable pageable) {
+    public Page<SalarieAideADomicile> getSalaries(String nom, Pageable pageable) {
         return salarieAideADomicileRepository.findAllByNom(nom, pageable);
     }
 

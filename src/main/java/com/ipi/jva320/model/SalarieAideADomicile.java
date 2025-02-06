@@ -1,6 +1,9 @@
 package com.ipi.jva320.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,12 +16,15 @@ public class SalarieAideADomicile {
 
     public static float CONGES_PAYES_ACQUIS_PAR_MOIS = 2.5f;
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotBlank(message = "Le nom est requis")
     private String nom;
+
+    @NotNull(message = "La date de début de contrat est requise")
+    private LocalDate moisDebutContrat;
 
     public static List<DayOfWeek> joursHabituellementTravailles = new ArrayList<DayOfWeek>();
 
@@ -31,26 +37,26 @@ public class SalarieAideADomicile {
     }
 
     private LocalDate moisEnCours;
-    private LocalDate moisDebutContrat;
 
-    private double joursTravaillesAnneeN= 0;
-    private double congesPayesAcquisAnneeN= 0;
+    private double joursTravaillesAnneeN = 0;
+    private double congesPayesAcquisAnneeN = 0;
 
     /** en année N sur l'acquis N-1 */
     @Convert(converter = LinkedHashSetStringConverter.class)
     @Column
     private LinkedHashSet<LocalDate> congesPayesPris = new LinkedHashSet<LocalDate>();
-    private double joursTravaillesAnneeNMoins1= 0;
-    private double congesPayesAcquisAnneeNMoins1= 0;
-    private double congesPayesPrisAnneeNMoins1= 0;
+    private double joursTravaillesAnneeNMoins1 = 0;
+    private double congesPayesAcquisAnneeNMoins1 = 0;
+    private double congesPayesPrisAnneeNMoins1 = 0;
 
     public SalarieAideADomicile() {
     }
 
     public SalarieAideADomicile(String nom, LocalDate moisDebutContrat, LocalDate moisEnCours,
-                                //LinkedHashSet<LocalDate> congesPayesPris,
-                                double joursTravaillesAnneeN, double congesPayesAcquisAnneeN,
-                                double joursTravaillesAnneeNMoins1, double congesPayesAcquisAnneeNMoins1, double congesPayesPrisAnneeNMoins1) {
+            // LinkedHashSet<LocalDate> congesPayesPris,
+            double joursTravaillesAnneeN, double congesPayesAcquisAnneeN,
+            double joursTravaillesAnneeNMoins1, double congesPayesAcquisAnneeNMoins1,
+            double congesPayesPrisAnneeNMoins1) {
         this.nom = nom;
         this.moisDebutContrat = moisDebutContrat;
         this.moisEnCours = moisEnCours;
@@ -59,16 +65,22 @@ public class SalarieAideADomicile {
         this.congesPayesPrisAnneeNMoins1 = congesPayesPrisAnneeNMoins1;
         this.joursTravaillesAnneeN = joursTravaillesAnneeN;
         this.congesPayesAcquisAnneeN = congesPayesAcquisAnneeN;
-        //this.congesPayesPris = congesPayesPris;
+        // this.congesPayesPris = congesPayesPris;
     }
 
     /**
-     * D'après https://femme-de-menage.ooreka.fr/comprendre/conges-payes-femme-de-menage :
-     * Pour s'ouvrir des droits à congés payés – capitalisation de jours + prise et/ou paiement – l'aide ménagère doit avoir travaillé pour le particulier employeur :
-     *     pendant au moins dix jours (pas forcément de suite) ;
-     *     à l'intérieur d'une période de temps – dite de « référence » – allant du 1er juin de l'année N au 31 mai de l'année N - 1.
-     * NB. on considère que la précédente ligne est correcte d'un point de vue des spécifications métier
+     * D'après
+     * https://femme-de-menage.ooreka.fr/comprendre/conges-payes-femme-de-menage :
+     * Pour s'ouvrir des droits à congés payés – capitalisation de jours + prise
+     * et/ou paiement – l'aide ménagère doit avoir travaillé pour le particulier
+     * employeur :
+     * pendant au moins dix jours (pas forcément de suite) ;
+     * à l'intérieur d'une période de temps – dite de « référence » – allant du 1er
+     * juin de l'année N au 31 mai de l'année N - 1.
+     * NB. on considère que la précédente ligne est correcte d'un point de vue des
+     * spécifications métier
      * bien que l'originale dans le lien dit "N+1" au lieu de "N-1"
+     * 
      * @return
      */
     public boolean aLegalementDroitADesCongesPayes() {
@@ -78,7 +90,8 @@ public class SalarieAideADomicile {
     /**
      * @param dateDebut
      * @param dateFin
-     * @return les jours de congé décomptés, ordonnés. Leur premier et dernier peuvent être après eux fournis.
+     * @return les jours de congé décomptés, ordonnés. Leur premier et dernier
+     *         peuvent être après eux fournis.
      */
     public LinkedHashSet<LocalDate> calculeJoursDeCongeDecomptesPourPlage(LocalDate dateDebut, LocalDate dateFin) {
         LinkedHashSet<LocalDate> joursDeCongeDecomptes = new LinkedHashSet<>();
@@ -90,17 +103,16 @@ public class SalarieAideADomicile {
         LocalDate dernierJourDeCongePris = this.getCongesPayesPris().isEmpty() ? null
                 : this.getCongesPayesPris().stream().reduce((first, second) -> second).get();
 
-        dateDebut = (dernierJourDeCongePris == null || dernierJourDeCongePris.isAfter(dateDebut)) ?
-                dateDebut : dateDebut.plusDays(1);
+        dateDebut = (dernierJourDeCongePris == null || dernierJourDeCongePris.isAfter(dateDebut)) ? dateDebut
+                : dateDebut.plusDays(1);
 
         LocalDate jour = dateDebut;
         if (dateDebut.getDayOfWeek().getValue() != DayOfWeek.SUNDAY.getValue()
-                    && !Entreprise.estJourFerie(dateDebut) && estHabituellementTravaille(dateDebut)) {
+                && !Entreprise.estJourFerie(dateDebut) && estHabituellementTravaille(dateDebut)) {
             joursDeCongeDecomptes.add(dateDebut);
         }
-        for (jour = jour.plusDays(1) ; jour.minusDays(1).isBefore(dateFin)
-                || (!estHabituellementTravaille(jour) && estJourOuvrable(jour));
-             jour = jour.plusDays(1)) {
+        for (jour = jour.plusDays(1); jour.minusDays(1).isBefore(dateFin)
+                || (!estHabituellementTravaille(jour) && estJourOuvrable(jour)); jour = jour.plusDays(1)) {
             if (jour.getDayOfWeek().getValue() != DayOfWeek.SUNDAY.getValue()
                     && !Entreprise.estJourFerie(jour)) {
                 joursDeCongeDecomptes.add(jour);
@@ -108,15 +120,15 @@ public class SalarieAideADomicile {
         }
         return joursDeCongeDecomptes;
     }
+
     public boolean estJourOuvrable(LocalDate jour) {
         return jour.getDayOfWeek().getValue() != DayOfWeek.SUNDAY.getValue()
                 && !Entreprise.estJourFerie(jour);
     }
+
     public boolean estHabituellementTravaille(LocalDate jour) {
         return joursHabituellementTravailles.contains(jour.getDayOfWeek());
     }
-
-
 
     public Long getId() {
         return id;
@@ -177,14 +189,15 @@ public class SalarieAideADomicile {
         return this.congesPayesAcquisAnneeNMoins1 - this.getCongesPayesPrisAnneeNMoins1();
     }
     /*
-    public double getCongesPayesRestantAnneeNMoins1() {
-        return congesPayesRestantAnneeNMoins1;
-    }
-
-    public void setCongesPayesRestantAnneeNMoins1(double congesPayesRestantAnneeNMoins1) {
-        this.congesPayesRestantAnneeNMoins1 = congesPayesRestantAnneeNMoins1;
-    }
-    */
+     * public double getCongesPayesRestantAnneeNMoins1() {
+     * return congesPayesRestantAnneeNMoins1;
+     * }
+     * 
+     * public void setCongesPayesRestantAnneeNMoins1(double
+     * congesPayesRestantAnneeNMoins1) {
+     * this.congesPayesRestantAnneeNMoins1 = congesPayesRestantAnneeNMoins1;
+     * }
+     */
 
     public double getCongesPayesAcquisAnneeNMoins1() {
         return congesPayesAcquisAnneeNMoins1;
@@ -217,12 +230,13 @@ public class SalarieAideADomicile {
     public void setMoisDebutContrat(LocalDate moisDebutContrat) {
         this.moisDebutContrat = moisDebutContrat;
     }
-    
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SalarieAideADomicile)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof SalarieAideADomicile))
+            return false;
         SalarieAideADomicile s = (SalarieAideADomicile) o;
         return Objects.equals(id, s.id) &&
                 Objects.equals(nom, s.nom);

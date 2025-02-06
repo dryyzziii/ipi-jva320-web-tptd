@@ -1,138 +1,215 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="common :: head"></head>
-<body>
+    <head th:replace="common :: head(~{::title})">
+        <title th:text="${salarie.id == null} ? 'Création de salarié' : 'Modification de salarié'">Détail du salarié</title>
+      </head>
+  <body>
+    <div th:replace="common :: navbar(activeSection='salaries', searchAction='/salaries')"></div>
+    <div class="container mt-4">
+      <h2
+        th:text="${salarie.id == null} ? #{msg.creation} : #{msg.modification}"
+      >
+        Détail du salarié
+      </h2>
 
-<div>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="http://localhost:8080/">Gestion des salariés</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li><a href="http://localhost:8080/salaries?page=0&amp;size=10&amp;sortProperty=nom&amp;sortDirection=ASC" class="nav-link">Liste des salariés <span class="badge badge-primary">26</span></a></li>
-            </ul>
-
-            <form class="form-inline my-2 my-lg-0" role="search" action="http://localhost:8080/salaries" method="GET">
-                <div class="form-group form-inline">
-                    <input name="nom" class="form-control" placeholder="Rechercher un nom" type="text">
-                </div>
-                <button type="submit" class="btn btn-outline-success ml-2 my-2 my-sm-0">Rechercher</button>
-            </form>
+      <form
+        id="saveForm"
+        th:object="${salarie}"
+        th:action="${salarie.id == null ? '/salaries/save' : '/salaries/' + salarie.id}"
+        method="post"
+      >
+        <!-- Global errors -->
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+          <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">
+            Global error
+          </p>
         </div>
-    </nav>
-</div>
 
-<div class="container">
-    <div th:text="#{msg.salarie}"></div><!-- TODO better messages example -->
-
-    <h2 th:text="${salarie.id == null} ? #{msg.creation} : #{msg.modification}">Détail du salarié</h2>
-
-    <form id="saveForm" th:action="${salarie.id == null ? '/salaries/save' : '/salaries/' + salarie.id}" method="post" class="row">
-        <div class="col-lg-6">
+        <div class="row">
+          <div class="col-lg-6">
             <div class="form-group">
-                <label class="form-control-label" for="id">ID</label>
-                <input type="text" th:value="${salarie.id}" class="form-control" id="id" disabled="true">
+              <label for="id">ID</label>
+              <input
+                type="text"
+                th:value="*{id}"
+                class="form-control"
+                id="id"
+                disabled
+              />
 
-                <label class="form-control-label" for="nom">Nom</label>
-                <input type="text" th:value="${salarie.nom}" class="form-control" name="nom" id="nom">
+              <label for="nom">Nom</label>
+              <input
+                type="text"
+                th:field="*{nom}"
+                class="form-control"
+                th:classappend="${#fields.hasErrors('nom')} ? 'is-invalid'"
+              />
+              <div
+                class="invalid-feedback"
+                th:if="${#fields.hasErrors('nom')}"
+                th:errors="*{nom}"
+              ></div>
 
-                <label class="form-control-label" for="moisEnCours">Mois en cours</label>
-                <input type="date" th:value="${salarie.moisEnCours}" class="form-control" name="moisEnCours" id="moisEnCours">
+              <label for="moisEnCours">Mois en cours</label>
+              <input
+                type="date"
+                th:field="*{moisEnCours}"
+                class="form-control"
+                th:classappend="${#fields.hasErrors('moisEnCours')} ? 'is-invalid'"
+              />
+              <div
+                class="invalid-feedback"
+                th:if="${#fields.hasErrors('moisEnCours')}"
+                th:errors="*{moisEnCours}"
+              ></div>
 
-                <label class="form-control-label" for="moisDebutContrat">Mois début contrat</label>
-                <input type="date" th:value="${salarie.moisDebutContrat}" class="form-control" name="moisDebutContrat" id="moisDebutContrat">
+              <label for="moisDebutContrat">Mois début contrat</label>
+              <input
+                type="date"
+                th:field="*{moisDebutContrat}"
+                class="form-control"
+                th:classappend="${#fields.hasErrors('moisDebutContrat')} ? 'is-invalid'"
+              />
+              <div
+                class="invalid-feedback"
+                th:if="${#fields.hasErrors('moisDebutContrat')}"
+                th:errors="*{moisDebutContrat}"
+              ></div>
             </div>
-        </div>
+          </div>
 
-        <div class="col-lg-6">
+          <div class="col-lg-6">
             <div class="form-group">
-                <div>
-                    <label class="form-control-label" for="joursTravaillesAnneeN">Jours travaillés année N</label>
-                    <div class="input-group">
-                        <input type="number" step="0.5" th:value="${salarie.joursTravaillesAnneeN}" class="form-control" name="joursTravaillesAnneeN" id="joursTravaillesAnneeN">
-                        <div class="input-group-append">
-                            <span class="input-group-text">j</span>
-                        </div>
-                    </div>
+              <label for="joursTravaillesAnneeN"
+                >Jours travaillés année N</label
+              >
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.5"
+                  th:field="*{joursTravaillesAnneeN}"
+                  class="form-control"
+                  th:classappend="${#fields.hasErrors('joursTravaillesAnneeN')} ? 'is-invalid'"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">j</span>
                 </div>
+                <div
+                  class="invalid-feedback"
+                  th:if="${#fields.hasErrors('joursTravaillesAnneeN')}"
+                  th:errors="*{joursTravaillesAnneeN}"
+                ></div>
+              </div>
 
-                <div>
-                    <label class="form-control-label" for="congesPayesAcquisAnneeN">Congés payés acquis année N</label>
-                    <div class="input-group">
-                        <input type="number" step="0.5" th:value="${salarie.congesPayesAcquisAnneeN}" class="form-control" name="congesPayesAcquisAnneeN" id="congesPayesAcquisAnneeN">
-                        <div class="input-group-append">
-                            <span class="input-group-text">j</span>
-                        </div>
-                    </div>
+              <label for="congesPayesAcquisAnneeN"
+                >Congés payés acquis année N</label
+              >
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.5"
+                  th:field="*{congesPayesAcquisAnneeN}"
+                  class="form-control"
+                  th:classappend="${#fields.hasErrors('congesPayesAcquisAnneeN')} ? 'is-invalid'"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">j</span>
                 </div>
+                <div
+                  class="invalid-feedback"
+                  th:if="${#fields.hasErrors('congesPayesAcquisAnneeN')}"
+                  th:errors="*{congesPayesAcquisAnneeN}"
+                ></div>
+              </div>
             </div>
-        </div>
+          </div>
 
-        <div class="col-lg-6">
-            <div>
-                <label class="form-control-label" for="joursTravaillesAnneeNMoins1">Jours travaillés année N-1</label>
-                <div class="input-group">
-                    <input type="number" step="0.5" th:value="${salarie.joursTravaillesAnneeNMoins1}" class="form-control" name="joursTravaillesAnneeNMoins1" id="joursTravaillesAnneeNMoins1">
-                    <div class="input-group-append">
-                        <span class="input-group-text">j</span>
-                    </div>
+          <div class="col-lg-6">
+            <div class="form-group">
+              <label for="joursTravaillesAnneeNMoins1"
+                >Jours travaillés année N-1</label
+              >
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.5"
+                  th:field="*{joursTravaillesAnneeNMoins1}"
+                  class="form-control"
+                  th:classappend="${#fields.hasErrors('joursTravaillesAnneeNMoins1')} ? 'is-invalid'"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">j</span>
                 </div>
-            </div>
+                <div
+                  class="invalid-feedback"
+                  th:if="${#fields.hasErrors('joursTravaillesAnneeNMoins1')}"
+                  th:errors="*{joursTravaillesAnneeNMoins1}"
+                ></div>
+              </div>
 
-            <div>
-                <label class="form-control-label" for="congesPayesAcquisAnneeNMoins1">Congés payés acquis année N-1</label>
-                <div class="input-group">
-                    <input type="number" step="0.5" th:value="${salarie.congesPayesAcquisAnneeNMoins1}" class="form-control" name="congesPayesAcquisAnneeNMoins1" id="congesPayesAcquisAnneeNMoins1">
-                    <div class="input-group-append">
-                        <span class="input-group-text">j</span>
-                    </div>
+              <label for="congesPayesAcquisAnneeNMoins1"
+                >Congés payés acquis année N-1</label
+              >
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.5"
+                  th:field="*{congesPayesAcquisAnneeNMoins1}"
+                  class="form-control"
+                  th:classappend="${#fields.hasErrors('congesPayesAcquisAnneeNMoins1')} ? 'is-invalid'"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">j</span>
                 </div>
-            </div>
+                <div
+                  class="invalid-feedback"
+                  th:if="${#fields.hasErrors('congesPayesAcquisAnneeNMoins1')}"
+                  th:errors="*{congesPayesAcquisAnneeNMoins1}"
+                ></div>
+              </div>
 
-            <div>
-                <label class="form-control-label" for="congesPayesPrisAnneeNMoins1">Congés payés pris année N-1</label>
-                <div class="input-group">
-                    <input type="number" step="0.5" th:value="${salarie.congesPayesPrisAnneeNMoins1}" class="form-control" name="congesPayesPrisAnneeNMoins1" id="congesPayesPrisAnneeNMoins1">
-                    <div class="input-group-append">
-                        <span class="input-group-text">j</span>
-                    </div>
+              <label for="congesPayesPrisAnneeNMoins1"
+                >Congés payés pris année N-1</label
+              >
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.5"
+                  th:field="*{congesPayesPrisAnneeNMoins1}"
+                  class="form-control"
+                  th:classappend="${#fields.hasErrors('congesPayesPrisAnneeNMoins1')} ? 'is-invalid'"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">j</span>
                 </div>
+                <div
+                  class="invalid-feedback"
+                  th:if="${#fields.hasErrors('congesPayesPrisAnneeNMoins1')}"
+                  th:errors="*{congesPayesPrisAnneeNMoins1}"
+                ></div>
+              </div>
             </div>
+          </div>
         </div>
 
         <div class="row mt-3">
-            <div class="col-lg-12">
-                <input type="submit" class="btn btn-primary" th:value="${salarie.id == null ? 'Créer' : 'Enregistrer'}">
-                <!-- Le bouton supprimer n'apparaît qu'en modification -->
-                <a th:if="${salarie.id != null}" th:href="@{/salaries/{id}/delete(id=${salarie.id})}" class="btn btn-danger">Supprimer</a>
-            </div>
+          <div class="col-12">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              th:text="${salarie.id == null ? 'Créer' : 'Enregistrer'}"
+            >
+              Submit
+            </button>
+            <a
+              th:if="${salarie.id != null}"
+              th:href="@{/salaries/{id}/delete(id=${salarie.id})}"
+              class="btn btn-danger"
+              >Supprimer</a
+            >
+          </div>
         </div>
-    </form>
-
-    <div class="row">
-        <div class="col-lg-6">
-            <ul class="list-group list-unstyled">
-                <li class="alert alert-danger" role="alert">Erreur dans un champ !</li>
-            </ul>
-        </div>
+      </form>
     </div>
-    <div class="row mt-2">
-        <div class="col-lg-6">
-            <input form="saveForm" class="btn btn-primary" type="submit" value="Enregistrer">
-            <a href="/salaries/10/delete" class="btn btn-danger">Supprimer</a>
-        </div>
-    </div>
-
-    <div class="row">
-    <table>
-        <tr><td class="alert alert-danger" role="alert">Erreur de type de données !</td></tr>
-    </table>
-    <div>Erreur globale spécifique !</div>
-    </div>
-</div>
-
-
-</body></html>
+  </body>
+</html>
