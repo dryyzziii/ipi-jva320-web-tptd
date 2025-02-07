@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <title>404 - Page non trouvée</title>
+    <style>
+      body {
+        margin: 0;
+        background-color: #bebebe;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+      }
+
+      .content-wrapper {
+        position: relative;
+        text-align: center;
+      }
+
+      .error-title {
+        font-size: 72px;
+        color: #333;
+        margin: 0;
+      }
+
+      .error-message {
+        font-size: 24px;
+        color: #666;
+        margin: 10px 0;
+      }
+
+      .physical-element {
+        position: absolute;
+        transform-origin: center center;
+      }
+
+      .physical-element:not(.falling) {
+        position: relative;
+        display: inline-block;
+      }
+
+      #game-container {
+        width: 600px;
+        height: 150px;
+        position: relative;
+        overflow: hidden;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        margin: 20px 0;
+      }
+
+      #dino {
+        width: 44px;
+        height: 47px;
+        position: absolute;
+        bottom: 0;
+        left: 40px;
+        background: url("/assets/dinosaure.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        transition: height 0.1s;
+      }
+
+      #dino.crouch {
+        height: 25px;
+      }
+
+      .obstacle {
+        position: absolute;
+        bottom: 0;
+      }
+
+      .cactus {
+        width: 60px;
+        height: 60px;
+        background: url("/assets/cactus.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+
+      .bird {
+        width: 80px;
+        height: 70px;
+        background: url("/assets/mouette.jpg");
+        background-size: contain;
+        background-repeat: no-repeat;
+        bottom: 15px !important;
+      }
+
+      .hitbox {
+        position: absolute;
+        border: 1px solid transparent;
+        pointer-events: none;
+      }
+
+      .hitbox.debug {
+        border-color: red;
+      }
+
+      .game-over {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        color: #666;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .score {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+        font-family: monospace;
+      }
+
+      .controls {
+        margin-top: 20px;
+        text-align: center;
+        color: #666;
+      }
+
+      .minecraft-explosion {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        pointer-events: none;
+      }
+
+      .minecraft-particle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        image-rendering: pixelated;
+        transform-origin: center;
+        animation: minecraft-explode 0.8s ease-out forwards;
+      }
+
+      .particle-red {
+        background-color: #ff5555;
+      }
+
+      .particle-yellow {
+        background-color: #ffaa00;
+      }
+
+      .particle-gray {
+        background-color: #aaaaaa;
+      }
+
+      .particle-smoke {
+        background-color: #555555;
+      }
+
+      @keyframes minecraft-explode {
+        0% {
+          transform: translate(0, 0) scale(1) rotate(0deg);
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.8;
+        }
+        100% {
+          transform: translate(var(--tx), var(--ty)) scale(0.2)
+            rotate(var(--rot));
+          opacity: 0;
+        }
+      }
+
+      .mario-gameover {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: "Press Start 2P", Arial, sans-serif;
+        color: white;
+        text-align: center;
+      }
+
+      .mario-gameover h2 {
+        font-size: 48px;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+        text-shadow: 3px 3px 0 #ff0000;
+      }
+
+      .mario-gameover .final-score {
+        font-size: 24px;
+        margin-bottom: 30px;
+      }
+
+      .mario-gameover .restart-btn {
+        padding: 15px 30px;
+        font-size: 20px;
+        background: #ff0000;
+        border: 4px solid #ffffff;
+        color: white;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .mario-gameover .restart-btn:hover {
+        transform: scale(1.1);
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes screenShake {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        25% {
+          transform: translate(-10px, -10px);
+        }
+        50% {
+          transform: translate(10px, 10px);
+        }
+        75% {
+          transform: translate(-10px, 10px);
+        }
+      }
+
+      .shake {
+        animation: screenShake 0.1s infinite;
+      }
+
+      .flame {
+        position: fixed;
+        width: 100px;
+        height: 100px;
+        pointer-events: none;
+        z-index: 9999;
+        background: none;
+        filter: blur(2px);
+      }
+
+      .flame::before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 50% 60%,
+          rgba(255, 157, 0, 1) 0%,
+          rgba(255, 88, 0, 0.8) 40%,
+          rgba(255, 0, 0, 0.4) 70%,
+          transparent 100%
+        );
+        animation: flameCore 0.5s infinite;
+      }
+
+      .flame::after {
+        content: "";
+        position: absolute;
+        width: 120%;
+        height: 120%;
+        left: -10%;
+        top: -10%;
+        background: radial-gradient(
+          circle at 50% 60%,
+          rgba(255, 225, 0, 0.7) 0%,
+          rgba(255, 157, 0, 0.5) 30%,
+          transparent 70%
+        );
+        animation: flameOuter 0.7s infinite;
+      }
+
+      @keyframes flameCore {
+        0%,
+        100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(0.9) rotate(-2deg);
+          opacity: 0.8;
+        }
+      }
+
+      @keyframes flameOuter {
+        0%,
+        100% {
+          transform: scale(1) rotate(0deg);
+        }
+        50% {
+          transform: scale(1.1) rotate(3deg);
+        }
+      }
+
+      .lightning {
+        position: fixed;
+        pointer-events: none;
+        z-index: 9998;
+        opacity: 1;
+      }
+
+      .lightning-bolt {
+        position: absolute;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 1) 40%,
+          rgba(200, 240, 255, 1) 50%,
+          rgba(255, 255, 255, 1) 60%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        transform-origin: 0 50%;
+        filter: blur(1px) brightness(1.5);
+        box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #69f, 0 0 40px #69f;
+        animation: lightningFlash 0.2s ease-out;
+      }
+
+      @keyframes lightningFlash {
+        0% {
+          opacity: 0;
+        }
+        10%,
+        40% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .score-container {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-family: monospace;
+        text-align: right;
+      }
+
+      .score,
+      .high-score {
+        font-size: 20px;
+        margin: 5px 0;
+      }
+
+      .high-score {
+        color: #ffd700;
+      }
+      .mario-gameover .scores {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .mario-gameover .high-score {
+        color: #ffd700;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content-wrapper">
+      <h1 class="error-title">404</h1>
+      <p class="error-message">Page non trouvée</p>
+
+      <div id="game-container">
+        <div id="dino"></div>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="game-over">
+          Game Over - Appuyez sur Espace pour recommencer
+        </div>
+        <div class="score-container">
+          <div class="score">Score: <span id="score">0</span></div>
+          <div class="high-score">
+            High Score: <span id="highScore">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <p>Espace = Sauter | Flèche Bas = S'accroupir</p>
+      </div>
+    </div>
+
+    <div id="minecraft-explosion" class="minecraft-explosion"></div>
+
+    <audio
+      id="explosionSound"
+      src="/assets/explosion.mp3"
+      preload="auto"
+    ></audio>
+    <audio id="jumpSound" src="/assets/saut.mp3" preload="auto"></audio>
+    <audio id="pointSound" src="/assets/point.mp3" preload="auto"></audio>
+
+    <script>
+      createHistoryBoard();
+      class PhysicalElement {
+        constructor(element, initialRect) {
+          this.element = element;
+          this.initialRect = initialRect;
+          this.width = initialRect.width;
+          this.height = initialRect.height;
+
+          // Position initiale au centre
+          this.x = window.innerWidth / 2 - this.width / 2;
+          this.y = window.innerHeight / 2 - this.height / 2;
+
+          // Force d'explosion aléatoire depuis le centre
+          const angle = Math.random() * Math.PI * 2;
+          const force = 15 + Math.random() * 10;
+
+          this.velocityX = Math.cos(angle) * force;
+          this.velocityY = Math.sin(angle) * force - 15;
+
+          this.rotation = 0;
+          this.rotationVelocity = (Math.random() - 0.5) * 20;
+          this.gravity = 0.8;
+          this.friction = 0.98;
+          this.bounce = 0.7;
+          this.isActive = true;
+
+          this.element.style.position = "fixed";
+          this.element.style.width = this.width + "px";
+          this.element.style.height = this.height + "px";
+          this.updatePosition();
+        }
+
+        update() {
+          if (!this.isActive) return;
+
+          this.velocityY += this.gravity;
+          this.velocityX *= this.friction;
+          this.rotationVelocity *= this.friction;
+
+          this.x += this.velocityX;
+          this.y += this.velocityY;
+          this.rotation += this.rotationVelocity;
+
+          // Rebonds avec limites pour rester visible dans la moitié supérieure
+          const verticalLimit = window.innerHeight * 0.6; // Limite à 60% de la hauteur
+          const horizontalMargin = 50;
+
+          if (this.y + this.height > verticalLimit) {
+            this.y = verticalLimit - this.height;
+            this.velocityY = -this.velocityY * this.bounce;
+          }
+
+          if (this.x + this.width > window.innerWidth - horizontalMargin) {
+            this.x = window.innerWidth - horizontalMargin - this.width;
+            this.velocityX *= -this.bounce;
+          } else if (this.x < horizontalMargin) {
+            this.x = horizontalMargin;
+            this.velocityX *= -this.bounce;
+          }
+
+          this.updatePosition();
+        }
+
+        updatePosition() {
+          this.element.style.transform = `translate(${this.x}px, ${this.y}px) rotate(${this.rotation}deg)`;
+        }
+
+        reset() {
+          this.x = this.initialRect.left;
+          this.y = this.initialRect.top;
+          this.rotation = 0;
+          this.element.style.position = "relative";
+          this.element.style.transform = "none";
+          this.element.classList.remove("falling");
+          this.isActive = false;
+        }
+
+        startFalling() {
+          this.element.classList.add("falling");
+          this.isActive = true;
+          this.element.style.position = "absolute";
+          this.x = this.initialRect.left;
+          this.y = this.initialRect.top;
+        }
+      }
+
+      let physicalElements = [];
+      let animationFrame = null;
+      let highScore = localStorage.getItem("dinoHighScore") || 0;
+      document.getElementById("highScore").textContent = highScore;
+
+      function splitIntoCharacters(element) {
+        const text = element.textContent;
+        element.textContent = "";
+        const spans = Array.from(text).map((char) => {
+          const span = document.createElement("span");
+          span.textContent = char;
+          span.style.display = "inline-block";
+          element.appendChild(span);
+          return span;
+        });
+        return spans;
+      }
+
+      function initializePhysicalElements() {
+        // Reset existing elements if any
+        physicalElements.forEach((el) => el.element.remove());
+        physicalElements = [];
+
+        // Séparer le titre et le message en caractères
+        const titleElement = document.querySelector(".error-title");
+        const messageElement = document.querySelector(".error-message");
+        const gameContainer = document.querySelector("#game-container");
+        const controls = document.querySelector(".controls");
+
+        // Cloner et préparer les éléments
+        [titleElement, messageElement].forEach((element) => {
+          const chars = splitIntoCharacters(element);
+          chars.forEach((char) => {
+            const rect = char.getBoundingClientRect();
+            physicalElements.push(new PhysicalElement(char, rect));
+          });
+        });
+
+        // Ajouter les autres éléments
+        [gameContainer, controls].forEach((element) => {
+          const rect = element.getBoundingClientRect();
+          physicalElements.push(new PhysicalElement(element, rect));
+        });
+      }
+
+      function animate() {
+        physicalElements.forEach((element) => element.update());
+        animationFrame = requestAnimationFrame(animate);
+      }
+
+      function startFallingAnimation() {
+        physicalElements.forEach((element) => element.startFalling());
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animate();
+      }
+
+      function resetElements() {
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+        physicalElements.forEach((element) => element.reset());
+      }
+
+      function createPhysicalElements() {
+        const physicalElements = [];
+
+        // Use correct class selectors
+        const titleChars = splitIntoCharacters(
+          document.querySelector(".error-title")
+        );
+        const messageChars = splitIntoCharacters(
+          document.querySelector(".error-message")
+        );
+
+        [...titleChars, ...messageChars].forEach((element) => {
+          const rect = element.getBoundingClientRect();
+          physicalElements.push(
+            new PhysicalElement(element, rect.left, rect.top)
+          );
+        });
+
+        ["#game-container", ".controls"].forEach((selector) => {
+          const element = document.querySelector(selector);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            physicalElements.push(
+              new PhysicalElement(element, rect.left, rect.top)
+            );
+          }
+        });
+
+        return physicalElements;
+      }
+
+      function createLightning() {
+        const lightning = document.createElement("div");
+        lightning.className = "lightning";
+        document.body.appendChild(lightning);
+
+        const numSegments = Math.floor(Math.random() * 5) + 4;
+        const startX = Math.random() * window.innerWidth;
+        const startY = 0;
+        const endX = startX + (Math.random() * 200 - 100);
+        const endY = Math.random() * (window.innerHeight / 2);
+
+        for (let i = 0; i < numSegments; i++) {
+          const bolt = document.createElement("div");
+          bolt.className = "lightning-bolt";
+
+          const segmentStartX = startX + (endX - startX) * (i / numSegments);
+          const segmentStartY = startY + (endY - startY) * (i / numSegments);
+          const segmentEndX =
+            startX + (endX - startX) * ((i + 1) / numSegments);
+          const segmentEndY =
+            startY + (endY - startY) * ((i + 1) / numSegments);
+
+          const deltaX = segmentEndX - segmentStartX;
+          const deltaY = segmentEndY - segmentStartY;
+          const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+
+          bolt.style.width = `${length}px`;
+          bolt.style.height = "2px";
+          bolt.style.left = `${segmentStartX}px`;
+          bolt.style.top = `${segmentStartY}px`;
+          bolt.style.transform = `rotate(${angle}deg)`;
+
+          lightning.appendChild(bolt);
+        }
+
+        setTimeout(() => lightning.remove(), 200);
+      }
+
+      function createFlames() {
+        const flameCount = Math.floor(Math.random() * 5) + 8;
+        for (let i = 0; i < flameCount; i++) {
+          const flame = document.createElement("div");
+          flame.className = "flame";
+          flame.style.left = Math.random() * window.innerWidth + "px";
+          flame.style.top = Math.random() * window.innerHeight + "px";
+          document.body.appendChild(flame);
+        }
+      }
+
+      function addGameOverEffects() {
+        document.body.classList.add("shake");
+        createFlames();
+
+        const lightningInterval = setInterval(createLightning, 20);
+
+        setTimeout(() => {
+          document.body.classList.remove("shake");
+          document
+            .querySelectorAll(".flame")
+            .forEach((flame) => flame.remove());
+          handleGameOver();
+        }, 1000);
+
+        window.currentLightningInterval = lightningInterval;
+      }
+
+      let dino = document.getElementById("dino");
+      let gameContainer = document.getElementById("game-container");
+      let scoreElement = document.getElementById("score");
+      let gameOverElement = document.querySelector(".game-over");
+
+      const explosionSound = document.getElementById("explosionSound");
+      const jumpSound = document.getElementById("jumpSound");
+      const pointSound = document.getElementById("pointSound");
+
+      let isJumping = false;
+      let isCrouching = false;
+      let position = 0;
+      let score = 0;
+      let isGameOver = false;
+      let gameSpeed = 5;
+      let jumpForce = 12;
+      let gravity = 0.6;
+      let velocityY = 0;
+      let normalHeight = 47;
+      let crouchHeight = 25;
+      let debugMode = false;
+
+      // Fonction pour créer et mettre à jour la hitbox
+      function updateHitbox(element, type) {
+        let hitbox = element.querySelector(".hitbox");
+        if (!hitbox) {
+          hitbox = document.createElement("div");
+          hitbox.className = "hitbox";
+          element.appendChild(hitbox);
+        }
+
+        const rect = element.getBoundingClientRect();
+        const margins = {
+          dino: { top: 0.2, bottom: 0.1, left: 0.15, right: 0.15 },
+          cactus: { top: 0.1, bottom: 0, left: 0.2, right: 0.2 },
+          bird: { top: 0.3, bottom: 0.3, left: 0.25, right: 0.25 },
+        }[type];
+
+        const width = rect.width * (1 - margins.left - margins.right);
+        const height =
+          type === "dino" && isCrouching
+            ? crouchHeight * (1 - margins.top - margins.bottom)
+            : rect.height * (1 - margins.top - margins.bottom);
+
+        hitbox.style.width = width + "px";
+        hitbox.style.height = height + "px";
+        hitbox.style.left = rect.width * margins.left + "px";
+        hitbox.style.top =
+          type === "dino" && isCrouching
+            ? crouchHeight * margins.top + "px"
+            : rect.height * margins.top + "px";
+
+        hitbox.classList.toggle("debug", debugMode);
+
+        return hitbox;
+      }
+
+      // Fonction de détection de collision améliorée
+      function checkCollision(obstacle) {
+        const dinoHitbox = updateHitbox(dino, "dino").getBoundingClientRect();
+        const obstacleHitbox = updateHitbox(
+          obstacle,
+          obstacle.classList.contains("bird") ? "bird" : "cactus"
+        ).getBoundingClientRect();
+
+        const hasCollided = !(
+          dinoHitbox.right < obstacleHitbox.left ||
+          dinoHitbox.left > obstacleHitbox.right ||
+          dinoHitbox.bottom < obstacleHitbox.top ||
+          dinoHitbox.top > obstacleHitbox.bottom
+        );
+
+        if (hasCollided) {
+          addGameOverEffects();
+          return true;
+        }
+        return false;
+      }
+
+      function update() {
+        if (isJumping) {
+          velocityY += gravity;
+          position = Math.max(0, position - velocityY);
+          dino.style.bottom = position + "px";
+
+          if (position <= 0) {
+            isJumping = false;
+            position = 0;
+            velocityY = 0;
+          }
+        }
+        updateHitbox(dino, "dino");
+        requestAnimationFrame(update);
+      }
+
+      function generateObstacle() {
+        if (!isGameOver) {
+          const obstacle = document.createElement("div");
+          const isBird = Math.random() < 0.3;
+
+          obstacle.classList.add("obstacle");
+          obstacle.classList.add(isBird ? "bird" : "cactus");
+
+          gameContainer.appendChild(obstacle);
+
+          let obstaclePosition = 580;
+
+          const moveObstacle = () => {
+            if (isGameOver) {
+              return;
+            }
+
+            obstaclePosition -= gameSpeed;
+            obstacle.style.left = obstaclePosition + "px";
+
+            if (checkCollision(obstacle)) {
+              return;
+            }
+
+            if (obstaclePosition < -80) {
+              obstacle.remove();
+              score++;
+              pointSound.currentTime = 0;
+              pointSound.play();
+              scoreElement.textContent = score;
+
+              if (score % 5 === 0) {
+                gameSpeed += 2;
+              }
+              return;
+            }
+
+            requestAnimationFrame(moveObstacle);
+          };
+
+          requestAnimationFrame(moveObstacle);
+        }
+      }
+
+      function jump() {
+        if (!isJumping && !isGameOver && !isCrouching) {
+          isJumping = true;
+          jumpSound.currentTime = 0;
+          jumpSound.play();
+          velocityY = -jumpForce;
+        }
+      }
+
+      function crouch(shouldCrouch) {
+        if (!isJumping && !isGameOver) {
+          isCrouching = shouldCrouch;
+          dino.style.height = shouldCrouch
+            ? crouchHeight + "px"
+            : normalHeight + "px";
+          dino.classList.toggle("crouch", shouldCrouch);
+        }
+      }
+
+      function createMinecraftExplosion() {
+        const explosionContainer = document.getElementById(
+          "minecraft-explosion"
+        );
+        explosionContainer.innerHTML = "";
+
+        // Ajouter l'onde de choc
+        const shockwave = document.createElement("div");
+        shockwave.className = "shockwave";
+        explosionContainer.appendChild(shockwave);
+
+        // Créer les particules pixelisées
+        const colors = [
+          "particle-red",
+          "particle-yellow",
+          "particle-gray",
+          "particle-smoke",
+        ];
+        const particleCount = 60;
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement("div");
+          particle.className = `minecraft-particle ${
+            colors[Math.floor(Math.random() * colors.length)]
+          }`;
+
+          // Position initiale au centre
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+
+          // Calcul de la trajectoire explosive
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * 200 + 100;
+          const tx = Math.cos(angle) * distance;
+          const ty = Math.sin(angle) * distance;
+          const rotation = Math.random() * 360;
+
+          particle.style.left = `${centerX}px`;
+          particle.style.top = `${centerY}px`;
+          particle.style.setProperty("--tx", `${tx}px`);
+          particle.style.setProperty("--ty", `${ty}px`);
+          particle.style.setProperty("--rot", `${rotation}deg`);
+
+          explosionContainer.appendChild(particle);
+        }
+      }
+
+      let gameHistory = [];
+      const maxHistoryItems = 5;
+
+      function updateHistory(newScore) {
+        // Add new game to history array
+        gameHistory.push({
+          gameNumber: gameHistory.length + 1,
+          score: newScore,
+          timestamp: new Date(),
+        });
+
+        // Keep only last 5 games
+        if (gameHistory.length > maxHistoryItems) {
+          gameHistory.shift();
+        }
+
+        // Update history board display
+        const historyList = document.querySelector(".history-list");
+        if (historyList) {
+          historyList.innerHTML = gameHistory
+            .map(
+              (game) => `
+            <div class="history-item" style="
+              padding: 8px;
+              border-bottom: 1px solid #e2e8f0;
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 8px;
+            ">
+              <span>Partie ${game.gameNumber}</span>
+              <span>${game.score}</span>
+              <span>${game.timestamp.getHours()}:${String(
+                game.timestamp.getMinutes()
+              ).padStart(2, "0")}</span>
+            </div>
+          `
+            )
+            .join("");
+        }
+      }
+
+      function createHistoryBoard() {
+        const board = document.createElement("div");
+        board.className = "history-board";
+        board.style.cssText = `
+          position: fixed;
+          top: 1rem;
+          right: 1rem;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(8px);
+          border-radius: 8px;
+          padding: 1rem;
+          width: 300px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          z-index: 1000;
+        `;
+
+        board.innerHTML = `
+          <div class="history-title" style="
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+          ">
+            HISTORIQUE
+          </div>
+          <div class="history-list"></div>
+        `;
+
+        document.body.appendChild(board);
+        return board;
+      }
+
+      function handleGameOver() {
+        updateHistory(score);
+        isGameOver = true;
+        gameOverElement.style.display = "block";
+        clearInterval(obstacleInterval);
+        // Phase 1: Screen shake + flames (1 seconde)
+        document.body.classList.add("shake");
+        createFlames();
+
+        // Phase 2: Explosion Minecraft + début chute éléments (après 1 seconde)
+        setTimeout(() => {
+          document.body.classList.remove("shake");
+          document
+            .querySelectorAll(".flame")
+            .forEach((flame) => flame.remove());
+
+          const explosion = document.getElementById("minecraft-explosion");
+          explosion.style.display = "block";
+          createMinecraftExplosion();
+
+          if (window.currentLightningInterval) {
+            clearInterval(window.currentLightningInterval);
+          }
+
+          if (physicalElements.length === 0) {
+            initializePhysicalElements();
+          }
+          startFallingAnimation();
+
+          if (score > highScore) {
+            highScore = score;
+            localStorage.setItem("dinoHighScore", highScore);
+          }
+
+          // Phase 3: Game Over screen (après 1.5 secondes)
+          setTimeout(() => {
+            const gameOverScreen = document.createElement("div");
+            gameOverScreen.className = "mario-gameover";
+            gameOverScreen.innerHTML = `
+          <h2>GAME OVER</h2>
+          <div class="scores">
+            <div class="final-score">Score Final: ${score}</div>
+            <div class="high-score">Meilleur Score: ${highScore}</div>
+          </div>
+          <button class="restart-btn">REJOUER</button>
+        `;
+            document.body.appendChild(gameOverScreen);
+            gameOverScreen.style.display = "flex";
+
+            const restartBtn = gameOverScreen.querySelector(".restart-btn");
+            restartBtn.addEventListener("click", () => {
+              gameOverScreen.remove();
+              restartGame();
+            });
+          }, 500);
+
+          // Nettoyage explosion
+          setTimeout(() => {
+            explosion.style.display = "none";
+          }, 1000);
+        }, 1000);
+      }
+
+      function restartGame() {
+        if (isGameOver) {
+          // Remove only the history board display, not the data
+          const historyBoard = document.querySelector(".history-board");
+          if (historyBoard) historyBoard.remove();
+
+          // Recreate history board with existing data
+          const newBoard = createHistoryBoard();
+          if (gameHistory.length > 0) {
+            const historyList = newBoard.querySelector(".history-list");
+            historyList.innerHTML = gameHistory
+              .map(
+                (game) => `
+        <div class="history-item" style="
+          padding: 8px;
+          border-bottom: 1px solid #e2e8f0;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 8px;
+        ">
+          <span>Partie ${game.gameNumber}</span>
+          <span>${game.score}</span>
+          <span>${game.timestamp.getHours()}:${String(
+                  game.timestamp.getMinutes()
+                ).padStart(2, "0")}</span>
+        </div>
+      `
+              )
+              .join("");
+          }
+
+          // Rest of the restart logic remains the same
+          physicalElements.forEach((element) => {
+            if (element.element.parentNode) {
+              element.element.remove();
+            }
+          });
+          physicalElements = [];
+
+          const contentWrapper = document.querySelector(".content-wrapper");
+          contentWrapper.innerHTML = `
+      <h1 class="error-title">404</h1>
+      <p class="error-message">Page non trouvée</p>
+      <div id="game-container">
+        <div id="dino"></div>
+        <div class="score-container">
+          <div class="score">Score: <span id="score">0</span></div>
+          <div class="high-score">High Score: <span id="highScore">${highScore}</span></div>
+        </div>
+        <div class="game-over">Game Over - Appuyez sur Espace pour recommencer</div>
+      </div>
+      <div class="controls">
+        <p>Espace = Sauter | Flèche Bas = S'accroupir</p>
+      </div>
+    `;
+
+          dino = document.getElementById("dino");
+          gameContainer = document.getElementById("game-container");
+          scoreElement = document.getElementById("score");
+          gameOverElement = document.querySelector(".game-over");
+
+          isJumping = false;
+          isCrouching = false;
+          position = 0;
+          score = 0;
+          isGameOver = false;
+          gameSpeed = 5;
+          jumpForce = 12;
+          gravity = 0.6;
+          velocityY = 0;
+          normalHeight = 47;
+          crouchHeight = 25;
+          debugMode = false;
+
+          document.body.classList.remove("shake");
+          document
+            .querySelectorAll(".flame")
+            .forEach((flame) => flame.remove());
+
+          const explosion = document.getElementById("minecraft-explosion");
+          explosion.style.display = "none";
+          explosion.innerHTML = "";
+
+          clearInterval(obstacleInterval);
+          obstacleInterval = setInterval(generateObstacle, 1500);
+          document.getElementById("highScore").textContent = highScore;
+        }
+      }
+
+      // Gestion des événements
+      document.addEventListener("keydown", (event) => {
+        if (event.code === "Space") {
+          event.preventDefault();
+          if (isGameOver) {
+            restartGame();
+          } else {
+            jump();
+          }
+        } else if (event.code === "ArrowDown") {
+          event.preventDefault();
+          crouch(true);
+        } else if (event.code === "KeyD") {
+          debugMode = !debugMode;
+          document.querySelectorAll(".hitbox").forEach((hitbox) => {
+            hitbox.classList.toggle("debug", debugMode);
+          });
+        }
+      });
+
+      document.addEventListener("keyup", (event) => {
+        if (event.code === "ArrowDown") {
+          crouch(false);
+        }
+      });
+
+      requestAnimationFrame(update);
+      let obstacleInterval = setInterval(generateObstacle, 1500);
+    </script>
+  </body>
+</html>

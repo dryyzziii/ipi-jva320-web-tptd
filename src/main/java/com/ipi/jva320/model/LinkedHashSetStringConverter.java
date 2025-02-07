@@ -20,6 +20,7 @@ public class LinkedHashSetStringConverter implements AttributeConverter<LinkedHa
             : localDates.stream().map(d -> d.toString()).collect(Collectors.joining(DELIMITER));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public LinkedHashSet<LocalDate> convertToEntityAttribute(String datesString) {
         return datesString == null ? null
